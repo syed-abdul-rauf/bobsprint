@@ -218,7 +218,19 @@ export class AutoPilotController {
   // ── Pipeline ──────────────────────────────────────────────────────────────
 
   private async runPipeline(): Promise<void> {
-    const isDemo = this.run.isDemo ||
+    // Check if bob is actually available on this server; if not, fall back to
+    // demo mode so the live site works for judges without a local bob install.
+    let bobAvailable = true;
+    try {
+      const check = await fetch('/api/bob');
+      if (check.ok) {
+        const data = await check.json() as { available?: boolean };
+        if (data.available === false) bobAvailable = false;
+      }
+    } catch { bobAvailable = false; }
+
+    const isDemo = !bobAvailable ||
+      this.run.isDemo ||
       this.run.githubUrl === DEMO_FIXTURE_URL ||
       this.run.githubUrl === `demo`;
 

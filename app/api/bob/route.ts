@@ -33,8 +33,8 @@ function resolveBobPath(): { exists: boolean; path: string | null } {
   for (const c of candidates) {
     if (nodeFs.existsSync(c)) return { exists: true, path: c };
   }
-  // Fall back: assume present if we can't check PATH directly
-  return { exists: true, path: 'bob' };
+  // Cannot confirm bob is on PATH — treat as not found
+  return { exists: false, path: null };
 }
 
 function resolveBobEntry(): { cmd: string; prependArgs: string[] } {
