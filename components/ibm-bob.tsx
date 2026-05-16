@@ -4,7 +4,7 @@ import { motion, useInView, useMotionValue, useSpring, useTransform } from "fram
 import { useEffect, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import type { MotionValue } from "framer-motion";
-import { Shield, AlertTriangle, Terminal as TerminalIcon } from "lucide-react";
+import { Shield, Terminal as TerminalIcon } from "lucide-react";
 
 const RobotScene = dynamic(() => import("@/components/RobotScene"), { ssr: false });
 
