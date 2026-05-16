@@ -2,6 +2,7 @@
 // Requires `bob` to be installed and authenticated (`bob login`).
 // Must run in Node.js runtime (not Edge) so child_process.spawn is available.
 export const runtime = 'nodejs';
+export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
@@ -104,12 +105,19 @@ export async function POST(request: NextRequest) {
 
   if (BOB_RELAY_URL) {
     try {
+      const relayTimeout = typeof timeoutMs === 'number' ? timeoutMs : 120_000;
       const res = await fetch(`${BOB_RELAY_URL}/api/bob`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, mode, timeoutMs }),
+        body: JSON.stringify({ prompt, mode, timeoutMs: relayTimeout }),
+        signal: AbortSignal.timeout(relayTimeout + 5_000),
       });
-      return NextResponse.json(await res.json());
+      const text = await res.text();
+      try {
+        return NextResponse.json(JSON.parse(text));
+      } catch {
+        return NextResponse.json({ ok: false, output: '', stderr: `VPS returned non-JSON: ${text.slice(0, 200)}`, durationMs: 0, exitCode: -1 });
+      }
     } catch (e) {
       return NextResponse.json({ ok: false, output: '', stderr: String(e), durationMs: 0, exitCode: -1 });
     }
