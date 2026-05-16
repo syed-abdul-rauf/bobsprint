@@ -1,0 +1,41 @@
+{"ts":"2026-05-15T23:22:11.513Z","command":"bob","args":[],"mode":"Plan","durationMs":1501,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-15T23:22:11.516Z","command":"bob","args":[],"mode":"Ask","durationMs":1503,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-15T23:22:13.034Z","command":"bob","args":[],"mode":"Code","durationMs":1514,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:23.202Z","command":"bob","args":[],"mode":"Ask","durationMs":1501,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:23.203Z","command":"bob","args":[],"mode":"Plan","durationMs":1502,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:23.217Z","command":"bob","args":[],"mode":"Plan","durationMs":1507,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:23.220Z","command":"bob","args":[],"mode":"Ask","durationMs":1509,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:24.737Z","command":"bob","args":[],"mode":"Code","durationMs":1514,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:24.750Z","command":"bob","args":[],"mode":"Code","durationMs":1508,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:26.265Z","command":"bob","args":[],"mode":"Code","durationMs":1510,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:26.277Z","command":"bob","args":[],"mode":"Code","durationMs":1505,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:27.793Z","command":"bob","args":[],"mode":"Code","durationMs":1511,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:27.808Z","command":"bob","args":[],"mode":"Code","durationMs":1509,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:29.316Z","command":"bob","args":[],"mode":"Ask","durationMs":1508,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:29.332Z","command":"bob","args":[],"mode":"Ask","durationMs":1505,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:30.855Z","command":"bob","args":[],"mode":"Ask","durationMs":1513,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:30.869Z","command":"bob","args":[],"mode":"Ask","durationMs":1512,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:32.370Z","command":"bob","args":[],"mode":"Ask","durationMs":1501,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:33:32.401Z","command":"bob","args":[],"mode":"Ask","durationMs":1513,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:18.605Z","command":"bob","args":[],"mode":"Plan","durationMs":1509,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:18.606Z","command":"bob","args":[],"mode":"Ask","durationMs":1510,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:18.620Z","command":"bob","args":[],"mode":"Plan","durationMs":1509,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:18.621Z","command":"bob","args":[],"mode":"Ask","durationMs":1509,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:20.135Z","command":"bob","args":[],"mode":"Code","durationMs":1511,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:21.919Z","command":"bob","args":[],"mode":"Code","durationMs":3277,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:23.446Z","command":"bob","args":[],"mode":"Code","durationMs":1507,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:23.466Z","command":"bob","args":[],"mode":"Code","durationMs":1501,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:24.978Z","command":"bob","args":[],"mode":"Code","durationMs":1512,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:26.124Z","command":"bob","args":[],"mode":"Code","durationMs":2634,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:27.660Z","command":"bob","args":[],"mode":"Ask","durationMs":1506,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:27.676Z","command":"bob","args":[],"mode":"Ask","durationMs":1502,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:29.190Z","command":"bob","args":[],"mode":"Ask","durationMs":1511,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:29.273Z","command":"bob","args":[],"mode":"Ask","durationMs":1543,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:30.798Z","command":"bob","args":[],"mode":"Ask","durationMs":1510,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T13:36:30.814Z","command":"bob","args":[],"mode":"Ask","durationMs":1506,"exitCode":0,"ok":true,"mock":true}
+{"ts":"2026-05-16T14:58:06.396Z","command":"C:\\Program Files\\nodejs\\node.exe","args":["--accept-license","--approval-mode","yolo","--hide-intermediary-output","--chat-mode","ask","--max-coins","1"],"mode":"ask","durationMs":50540,"exitCode":0,"ok":true,"mock":false,"costEstimate":null}
+{"ts":"2026-05-16T14:59:17.411Z","command":"C:\\Program Files\\nodejs\\node.exe","args":["--accept-license","--approval-mode","yolo","--hide-intermediary-output","--chat-mode","plan","--max-coins","1"],"mode":"plan","durationMs":121573,"exitCode":0,"ok":true,"mock":false,"costEstimate":null}
+{"ts":"2026-05-16T15:01:35.950Z","command":"C:\\Program Files\\nodejs\\node.exe","args":["--accept-license","--approval-mode","yolo","--hide-intermediary-output","--chat-mode","code","--max-coins","1"],"mode":"code","durationMs":138536,"exitCode":0,"ok":true,"mock":false,"costEstimate":null}
+{"ts":"2026-05-16T15:12:02.853Z","command":"C:\\Program Files\\nodejs\\node.exe","args":["--accept-license","--approval-mode","yolo","--hide-intermediary-output","--output-format","json","--chat-mode","ask","--max-coins","1"],"mode":"ask","durationMs":50606,"exitCode":0,"ok":true,"mock":false,"costEstimate":0.077125,"budgetSpend":0.9}
+{"ts":"2026-05-16T15:13:20.936Z","command":"C:\\Program Files\\nodejs\\node.exe","args":["--accept-license","--approval-mode","yolo","--hide-intermediary-output","--output-format","json","--chat-mode","plan","--max-coins","1"],"mode":"plan","durationMs":128706,"exitCode":0,"ok":true,"mock":false,"costEstimate":0.4591989999999999,"budgetSpend":1.28}
+{"ts":"2026-05-16T15:15:34.875Z","command":"C:\\Program Files\\nodejs\\node.exe","args":["--accept-license","--approval-mode","yolo","--hide-intermediary-output","--output-format","json","--chat-mode","code","--max-coins","1"],"mode":"code","durationMs":133936,"exitCode":0,"ok":true,"mock":false,"costEstimate":0.237259,"budgetSpend":1.64}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npx playwright *)",
+      "PowerShell(Get-NetTCPConnection *)"
+    ]
+  }
+}

@@ -1,0 +1,187 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import {
+  Search, Bot, Shield, GitPullRequest, CheckCircle2,
+  XCircle, Loader2, BookOpen, MessageSquare, Code2,
+} from 'lucide-react';
+import type { AutoPilotStage } from '@/lib/types';
+import type { AutoPilotRun } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+type StageStatus = 'idle' | 'active' | 'complete' | 'error' | 'aborted';
+
+const STAGE_ORDER: AutoPilotStage[] = ['recon', 'fan-out', 'safety-gate', 'apply', 'done'];
+
+const STAGE_META = [
+  { key: 'recon'        as AutoPilotStage, label: 'Recon',         icon: Search,         desc: 'Reading repo structure and sampling code' },
+  { key: 'fan-out'      as AutoPilotStage, label: 'Bob Fan-out',   icon: Bot,            desc: 'Plan · Ask · Code running in parallel' },
+  { key: 'safety-gate' as AutoPilotStage, label: 'Safety Gate',   icon: Shield,         desc: 'Every change reviewed before touching any file' },
+  { key: 'apply'        as AutoPilotStage, label: 'Apply + PR',    icon: GitPullRequest, desc: 'Committing approved files and opening the draft PR' },
+  { key: 'done'         as AutoPilotStage, label: 'Done',          icon: CheckCircle2,   desc: 'All approved changes landed on the fork branch' },
+];
+
+const FAN_OUT_MODES = [
+  { label: 'Plan', icon: BookOpen,       color: 'cyan'   },
+  { label: 'Ask',  icon: MessageSquare,  color: 'violet' },
+  { label: 'Code', icon: Code2,          color: 'cyan'   },
+] as const;
+
+function getStatus(stageKey: AutoPilotStage, current: AutoPilotStage): StageStatus {
+  if (current === 'idle') return 'idle';
+  const ci = STAGE_ORDER.indexOf(current);
+  const si = STAGE_ORDER.indexOf(stageKey);
+  if (current === 'error')   return si < ci - 1 ? 'complete' : si <= ci ? 'error'   : 'idle';
+  if (current === 'aborted') return si < ci - 1 ? 'complete' : si === ci - 1 ? 'aborted' : 'idle';
+  if (si < ci) return 'complete';
+  if (si === ci) return 'active';
+  return 'idle';
+}
+
+const STATUS_RING: Record<StageStatus, string> = {
+  idle:     'border-[var(--border-subtle)] text-ink-500',
+  active:   'border-cyan/50 text-cyan',
+  complete: 'border-success/40 text-success',
+  error:    'border-danger/40 text-danger',
+  aborted:  'border-warning/40 text-warning',
+};
+
+const STATUS_CARD: Record<StageStatus, string> = {
+  idle:     'bg-[var(--bg-card)] border-[var(--border-subtle)]',
+  active:   'bg-[var(--bg-card-active)] border-[var(--border-active)] shadow-active',
+  complete: 'bg-success/[0.04] border-success/20',
+  error:    'bg-danger/[0.06] border-danger/30',
+  aborted:  'bg-warning/[0.05] border-warning/25',
+};
+
+const STATUS_LABEL: Record<StageStatus, string> = {
+  idle:     'text-ink-500',
+  active:   'text-ink-100',
+  complete: 'text-ink-100',
+  error:    'text-danger',
+  aborted:  'text-warning',
+};
+
+function StageIcon({ status, Icon }: { status: StageStatus; Icon: React.ElementType }) {
+  if (status === 'active')   return <Loader2 className="w-4 h-4 animate-spin" />;
+  if (status === 'complete') return <CheckCircle2 className="w-4 h-4 text-success" />;
+  if (status === 'error')    return <XCircle className="w-4 h-4 text-danger" />;
+  return <Icon className="w-4 h-4" />;
+}
+
+function FanOutSubCards({ active }: { active: boolean }) {
+  if (!active) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.25 }}
+      className="mt-2 grid grid-cols-3 gap-2"
+    >
+      {FAN_OUT_MODES.map(({ label, icon: ModeIcon, color }) => (
+        <div
+          key={label}
+          className={cn(
+            'flex flex-col items-center gap-1.5 py-2.5 rounded-lg border',
+            color === 'cyan'
+              ? 'border-cyan/20 bg-cyan/[0.04]'
+              : 'border-violet/20 bg-violet/[0.04]',
+          )}
+        >
+          <ModeIcon className={cn('w-3.5 h-3.5', color === 'cyan' ? 'text-cyan' : 'text-violet')} />
+          <span className="text-[10px] font-mono text-ink-400">{label}</span>
+          <span className="text-[10px] font-mono text-ink-600 animate-pulse">running…</span>
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
+export function PipelineStages({
+  currentStage,
+  run,
+}: {
+  currentStage: AutoPilotStage;
+  run?: AutoPilotRun | null;
+}) {
+  const activeIdx = STAGE_ORDER.indexOf(currentStage);
+
+  return (
+    <div className="relative" role="status" aria-label="Pipeline progress">
+      {/* Vertical rail */}
+      <div className="absolute left-[1.375rem] top-6 bottom-6 w-0.5 bg-[var(--border-subtle)]" aria-hidden />
+      {activeIdx > 0 && (
+        <div
+          className="absolute left-[1.375rem] top-6 w-0.5 bg-cyan/60 animate-rail-fill"
+          style={{ height: `${Math.min(1, activeIdx / (STAGE_ORDER.length - 1)) * 100}%` }}
+          aria-hidden
+        />
+      )}
+
+      <div className="flex flex-col gap-1.5">
+        {STAGE_META.map((stage, i) => {
+          const status = getStatus(stage.key, currentStage);
+          const Icon = stage.icon;
+          const isFanOut = stage.key === 'fan-out';
+
+          return (
+            <motion.div
+              key={stage.key}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.06, duration: 0.35 }}
+              className={cn(
+                'relative flex items-start gap-3 p-3.5 rounded-xl border transition-all duration-300',
+                STATUS_CARD[status],
+              )}
+            >
+              {/* Stage icon bubble */}
+              <div className={cn(
+                'relative z-10 flex-shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center',
+                STATUS_RING[status],
+              )}>
+                <StageIcon status={status} Icon={Icon} />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={cn('font-semibold text-sm', STATUS_LABEL[status])}>
+                    {stage.label}
+                  </span>
+
+                  {status === 'active' && (
+                    <span className="text-[10px] font-mono text-cyan/80 animate-pulse">running</span>
+                  )}
+                  {status === 'complete' && isFanOut && run?.safeWins && run.safeWins.length > 0 && (
+                    <span className="text-[10px] font-mono text-success">{run.safeWins.length} safe wins</span>
+                  )}
+                  {status === 'complete' && stage.key === 'safety-gate' && run?.safeWins && (
+                    <span className="text-[10px] font-mono text-warning">
+                      {run.safeWins.filter((w) => w.safetyStatus === 'deferred').length} deferred
+                    </span>
+                  )}
+                </div>
+
+                <p className={cn('text-[11px] leading-relaxed mt-0.5', status === 'idle' ? 'text-ink-700' : 'text-ink-400')}>
+                  {stage.desc}
+                </p>
+
+                {isFanOut && <FanOutSubCards active={status === 'active'} />}
+
+                {/* Active-stage progress sweep */}
+                {status === 'active' && (
+                  <div className="relative mt-2 h-px overflow-hidden rounded-full bg-[var(--border-subtle)]">
+                    <div className="absolute inset-y-0 left-0 w-1/3 bg-cyan/60 animate-progress-sweep" />
+                  </div>
+                )}
+              </div>
+
+              <span className="text-[10px] font-mono text-ink-700 shrink-0 mt-0.5">0{i + 1}</span>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

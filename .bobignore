@@ -1,0 +1,43 @@
+# .bobignore — patterns Bob Shell should skip when reading this repo
+# Syntax mirrors .gitignore
+
+# Build artifacts
+.next/
+out/
+build/
+dist/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Bob bridge session logs — contain invocation metadata, not source
+bob_sessions/
+
+# Large generated files
+*.tsbuildinfo
+next-env.d.ts
+
+# Test snapshots and fixtures (large, not signal)
+**/__snapshots__/
+**/fixtures/
+
+# Media
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.woff
+*.woff2
+*.ttf
+*.eot
+
+# Secrets (should never exist, but belt-and-suspenders)
+.env
+.env.*
+*.key
+ibm-credentials.env
+apikey.json
+secrets/
