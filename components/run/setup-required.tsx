@@ -16,7 +16,7 @@ const STEPS = [
     heading: 'Install it',
     body: 'Open a terminal and run these two commands (replace the filename if yours differs):',
     cmds: [
-      { value: 'cd %USERPROFILE%\\Downloads', note: 'Mac/Linux: cd ~/Downloads' },
+      { value: 'cd $HOME/Downloads', note: 'Windows CMD: cd %USERPROFILE%\\Downloads' },
       { value: 'npm install -g bobshell-1.0.3.tgz', note: 'Use the exact filename from your download' },
     ],
   },

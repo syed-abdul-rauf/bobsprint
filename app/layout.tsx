@@ -24,11 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Pre-paint theme script — runs before first render to avoid FOUC.
             Reads bobsprint:theme ('dark'|'light'|'system'), falls back to
             prefers-color-scheme, then sets/removes .dark on <html>. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('bobsprint:theme');var d=s==='dark'||(s!=='light'&&(s!=='system'?!s:!0)&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}})()`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: `document.documentElement.classList.add('dark')` }} />
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
