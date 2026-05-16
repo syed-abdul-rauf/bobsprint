@@ -1,113 +1,112 @@
 'use client';
 
-import { Download, Terminal, LogIn, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Terminal, ExternalLink, Zap } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copy-button';
+import Link from 'next/link';
 
-const INSTALL_CMD = 'npm install -g .\\bobshell-1.0.3.tgz';
-const AUTH_CMD = 'bob';
-
-type StepProps = {
-  number: number;
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-};
-
-function Step({ number, icon, title, children }: StepProps) {
-  return (
-    <div className="flex gap-4">
-      <div className="flex flex-col items-center gap-1 shrink-0">
-        <div className="w-7 h-7 rounded-full bg-cyan/10 border border-cyan/25 flex items-center justify-center">
-          <span className="text-xs font-bold text-cyan">{number}</span>
-        </div>
-        <div className="flex-1 w-px bg-border-subtle min-h-[1.5rem]" />
-      </div>
-      <div className="pb-5 min-w-0 flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-ink-500">{icon}</span>
-          <span className="text-sm font-semibold text-ink-200">{title}</span>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function CodeBlock({ value, note }: { value: string; note?: string }) {
-  return (
-    <div className="space-y-1">
-      <div className="card flex items-center gap-3 rounded-xl p-3 font-mono text-sm">
-        <Terminal className="w-3.5 h-3.5 text-ink-500 shrink-0" />
-        <code className="flex-1 text-cyan text-xs">{value}</code>
-        <CopyButton value={value} />
-      </div>
-      {note && <p className="text-ink-600 text-xs pl-1">{note}</p>}
-    </div>
-  );
-}
+const STEPS = [
+  {
+    n: 1,
+    heading: 'Download Bob Shell',
+    body: 'Go to the IBM Bob portal and download the Bob Shell installer (.tgz).',
+    cta: { label: 'Open IBM Bob Portal →', href: 'https://bob.ibm.com' },
+  },
+  {
+    n: 2,
+    heading: 'Install it (one command)',
+    body: 'Open a terminal in your Downloads folder and run:',
+    cmd: 'npm install -g .\\bobshell-1.0.3.tgz',
+    cmdNote: 'Mac / Linux: use a forward slash  →  ./bobshell-1.0.3.tgz',
+  },
+  {
+    n: 3,
+    heading: 'Sign in with your IBMid',
+    body: 'Run bob — it opens a browser tab to log you in. Done.',
+    cmd: 'bob',
+  },
+];
 
 export function SetupRequired({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="rounded-2xl p-6 md:p-8 bg-warning/[0.04] border border-warning/20">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="w-4 h-4 text-warning" />
-        <span className="text-xs font-mono font-bold tracking-widest uppercase text-warning">
-          Bob Shell not found
-        </span>
+    <div className="max-w-xl mx-auto">
+      {/* Title */}
+      <div className="mb-8 text-center">
+        <p className="text-xs font-mono tracking-widest uppercase text-warning mb-3">
+          Bob Shell not detected
+        </p>
+        <h2 className="text-2xl font-black text-ink-100 mb-2">
+          Get set up in 3 steps
+        </h2>
+        <p className="text-ink-400 text-sm">
+          BobSprint runs IBM Bob under the hood. Install takes ~2 minutes.
+        </p>
       </div>
-
-      <h2 className="text-xl font-bold text-ink-100 mb-1">Install IBM Bob Shell</h2>
-      <p className="text-ink-400 text-sm leading-relaxed mb-6">
-        BobSprint needs Bob Shell to analyze repositories. Install in 3 steps:
-      </p>
 
       {/* Steps */}
-      <div>
-        <Step number={1} icon={<Download className="w-3.5 h-3.5" />} title="Download the Bob Shell installer">
-          <p className="text-ink-400 text-xs mb-2">
-            Go to the IBM Bob portal, open the <span className="text-ink-300 font-mono">Bob Shell</span> tab,
-            and download the <span className="text-ink-300 font-mono">Windows x64</span> (or Mac/Linux) <span className="text-ink-300 font-mono">.tgz</span>.
-          </p>
-          <a
-            href="https://bob.ibm.com/download"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan hover:underline focus-ring rounded"
+      <div className="space-y-4 mb-8">
+        {STEPS.map((s) => (
+          <div
+            key={s.n}
+            className="card rounded-2xl p-5 flex gap-4 items-start border border-border-subtle"
           >
-            bob.ibm.com/download <ExternalLink className="w-2.5 h-2.5" />
-          </a>
-        </Step>
+            {/* Number badge */}
+            <div className="w-8 h-8 rounded-full bg-cyan/10 border border-cyan/30 flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-sm font-black text-cyan">{s.n}</span>
+            </div>
 
-        <Step number={2} icon={<Terminal className="w-3.5 h-3.5" />} title="Install globally via npm">
-          <CodeBlock
-            value={INSTALL_CMD}
-            note="Run from the folder where the .tgz was downloaded. On Mac/Linux, use forward slashes."
-          />
-        </Step>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-ink-100 mb-1">{s.heading}</p>
+              <p className="text-ink-400 text-sm mb-3">{s.body}</p>
 
-        <Step number={3} icon={<LogIn className="w-3.5 h-3.5" />} title="Authenticate with your IBMid">
-          <p className="text-ink-400 text-xs mb-2">
-            Run <span className="font-mono text-ink-300">bob</span> in any terminal — it opens a browser to sign in.
-          </p>
-          <CodeBlock value={AUTH_CMD} />
-        </Step>
+              {s.cta && (
+                <a
+                  href={s.cta.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan hover:text-cyan/80 transition-colors"
+                >
+                  {s.cta.label} <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+
+              {s.cmd && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 bg-[var(--bg-base)] rounded-xl px-4 py-3 border border-border-subtle font-mono text-sm">
+                    <Terminal className="w-3.5 h-3.5 text-ink-500 shrink-0" />
+                    <code className="flex-1 text-cyan text-xs">{s.cmd}</code>
+                    <CopyButton value={s.cmd} />
+                  </div>
+                  {s.cmdNote && (
+                    <p className="text-ink-600 text-xs pl-1">{s.cmdNote}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Footer note */}
-      <p className="text-ink-600 text-xs font-mono mt-1 mb-5 leading-relaxed">
-        Already installed but still seeing this screen? Click <span className="text-ink-400">Retry</span> below.
-        {' '}Or type{' '}
-        <span className="text-ink-300">demo</span>
-        {' '}as your repo URL to run fully offline without Bob.
-      </p>
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <button
+          onClick={onRetry}
+          className="btn btn-primary w-full sm:w-auto px-6 py-3 text-sm font-semibold"
+        >
+          I&apos;ve installed Bob — Retry
+        </button>
 
-      <button
-        onClick={onRetry}
-        className="btn btn-primary px-5 py-2.5 text-sm font-semibold"
-      >
-        Retry
-      </button>
+        <Link
+          href="/run?url=demo"
+          className="btn w-full sm:w-auto px-6 py-3 text-sm font-semibold border border-border-subtle text-ink-300 hover:text-ink-100 hover:border-border-active transition-colors inline-flex items-center justify-center gap-2"
+        >
+          <Zap className="w-3.5 h-3.5" />
+          Skip — Try demo mode instead
+        </Link>
+      </div>
+
+      <p className="text-center text-ink-600 text-xs mt-4">
+        Demo mode runs fully offline. No Bob needed.
+      </p>
     </div>
   );
 }
