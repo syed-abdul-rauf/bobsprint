@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Three.js needs to be transpiled
-  transpilePackages: ["three"],
-  webpack: (config) => {
-    config.externals = config.externals || [];
-    return config;
-  },
+  // Keep Three.js ecosystem out of the server bundle — loaded client-only via dynamic()
+  serverExternalPackages: ["three", "@react-three/fiber", "@react-three/drei"],
 };
 
 export default nextConfig;
