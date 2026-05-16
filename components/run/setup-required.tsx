@@ -8,21 +8,23 @@ const STEPS = [
   {
     n: 1,
     heading: 'Download Bob Shell',
-    body: 'Go to the IBM Bob portal and download the Bob Shell installer (.tgz).',
+    body: 'Go to the IBM Bob portal → Bob Shell tab → download the .tgz for your OS.',
     cta: { label: 'Open IBM Bob Portal →', href: 'https://bob.ibm.com' },
   },
   {
     n: 2,
-    heading: 'Install it (one command)',
-    body: 'Open a terminal in your Downloads folder and run:',
-    cmd: 'npm install -g .\\bobshell-1.0.3.tgz',
-    cmdNote: 'Mac / Linux: use a forward slash  →  ./bobshell-1.0.3.tgz',
+    heading: 'Install it',
+    body: 'Open a terminal and run these two commands (replace the filename if yours differs):',
+    cmds: [
+      { value: 'cd %USERPROFILE%\\Downloads', note: 'Mac/Linux: cd ~/Downloads' },
+      { value: 'npm install -g bobshell-1.0.3.tgz', note: 'Use the exact filename from your download' },
+    ],
   },
   {
     n: 3,
     heading: 'Sign in with your IBMid',
     body: 'Run bob — it opens a browser tab to log you in. Done.',
-    cmd: 'bob',
+    cmds: [{ value: 'bob', note: '' }],
   },
 ];
 
@@ -69,16 +71,20 @@ export function SetupRequired({ onRetry }: { onRetry: () => void }) {
                 </a>
               )}
 
-              {s.cmd && (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3 bg-[var(--bg-base)] rounded-xl px-4 py-3 border border-border-subtle font-mono text-sm">
-                    <Terminal className="w-3.5 h-3.5 text-ink-500 shrink-0" />
-                    <code className="flex-1 text-cyan text-xs">{s.cmd}</code>
-                    <CopyButton value={s.cmd} />
-                  </div>
-                  {s.cmdNote && (
-                    <p className="text-ink-600 text-xs pl-1">{s.cmdNote}</p>
-                  )}
+              {s.cmds && (
+                <div className="space-y-2">
+                  {s.cmds.map((c) => (
+                    <div key={c.value} className="space-y-1">
+                      <div className="flex items-center gap-3 bg-[var(--bg-base)] rounded-xl px-4 py-3 border border-border-subtle font-mono text-sm">
+                        <Terminal className="w-3.5 h-3.5 text-ink-500 shrink-0" />
+                        <code className="flex-1 text-cyan text-xs">{c.value}</code>
+                        <CopyButton value={c.value} />
+                      </div>
+                      {c.note && (
+                        <p className="text-ink-600 text-xs pl-1">{c.note}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
