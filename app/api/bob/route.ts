@@ -71,9 +71,17 @@ interface BobShellResult {
 
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
+const BOB_RELAY_URL = process.env.BOB_RELAY_URL?.replace(/\/$/, '');
+
 export async function GET() {
-  // File-existence check only — no bob --version spawn (adds latency, risks coins).
-  // If the entry point exists on disk, we treat bob as available.
+  if (BOB_RELAY_URL) {
+    try {
+      const res = await fetch(`${BOB_RELAY_URL}/api/bob`);
+      return NextResponse.json(await res.json());
+    } catch {
+      return NextResponse.json({ available: false, reason: 'relay_unreachable' });
+    }
+  }
   const { exists, path: resolvedPath } = resolveBobPath();
   if (!exists) {
     return NextResponse.json({ available: false, reason: 'binary_not_found' });
@@ -92,6 +100,19 @@ export async function POST(request: NextRequest) {
   const { prompt, mode, timeoutMs = 120_000 } = body;
   if (typeof prompt !== 'string' || !prompt.trim()) {
     return NextResponse.json({ error: 'prompt required' }, { status: 400 });
+  }
+
+  if (BOB_RELAY_URL) {
+    try {
+      const res = await fetch(`${BOB_RELAY_URL}/api/bob`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, mode, timeoutMs }),
+      });
+      return NextResponse.json(await res.json());
+    } catch (e) {
+      return NextResponse.json({ ok: false, output: '', stderr: String(e), durationMs: 0, exitCode: -1 });
+    }
   }
 
   const result = await runBob(
