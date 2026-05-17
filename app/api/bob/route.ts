@@ -117,9 +117,15 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({ prompt, mode, timeoutMs: relayTimeout }),
         signal: AbortSignal.timeout(relayTimeout + 5_000),
       });
+      // VPS now returns SSE — pass the stream through to the browser.
+      if (res.headers.get('content-type')?.includes('text/event-stream')) {
+        return new Response(res.body, {
+          headers: { ...CORS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+        });
+      }
       const text = await res.text();
       try {
-        return NextResponse.json(JSON.parse(text));
+        return NextResponse.json(JSON.parse(text), { headers: CORS });
       } catch {
         return NextResponse.json({ ok: false, output: '', stderr: `VPS returned non-JSON: ${text.slice(0, 200)}`, durationMs: 0, exitCode: -1 });
       }
@@ -128,13 +134,36 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const result = await runBob(
-    prompt,
-    typeof mode === 'string' ? mode : undefined,
-    typeof timeoutMs === 'number' ? timeoutMs : 120_000,
-  );
+  const resolvedTimeoutMs = typeof timeoutMs === 'number' ? timeoutMs : 120_000;
 
-  return NextResponse.json(result, { headers: CORS });
+  // Stream SSE so proxy timeouts (Cloudflare 524, nginx) don't kill long Bob runs.
+  // Keepalive comments are sent every 30s; the final result arrives as a data event.
+  const stream = new ReadableStream({
+    async start(controller) {
+      const enc = new TextEncoder();
+      const keepalive = setInterval(() => {
+        try { controller.enqueue(enc.encode(': keepalive\n\n')); } catch { /* stream closed */ }
+      }, 30_000);
+      try {
+        const result = await runBob(
+          prompt,
+          typeof mode === 'string' ? mode : undefined,
+          resolvedTimeoutMs,
+        );
+        controller.enqueue(enc.encode(`data: ${JSON.stringify(result)}\n\n`));
+      } catch (e) {
+        const err: BobShellResult = { ok: false, output: '', stderr: String(e), durationMs: 0, exitCode: -1 };
+        controller.enqueue(enc.encode(`data: ${JSON.stringify(err)}\n\n`));
+      } finally {
+        clearInterval(keepalive);
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...CORS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+  });
 }
 
 // ── Bob spawn ─────────────────────────────────────────────────────────────────

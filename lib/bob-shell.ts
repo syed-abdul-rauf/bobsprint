@@ -56,6 +56,27 @@ export async function runWithBob(
       };
     }
 
+    // SSE streaming response — keepalive comments keep proxies from timing out.
+    if (res.headers.get('content-type')?.includes('text/event-stream')) {
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const events = buf.split('\n\n');
+        buf = events.pop() ?? '';
+        for (const ev of events) {
+          const line = ev.trim();
+          if (line.startsWith('data: ')) {
+            try { return JSON.parse(line.slice(6)) as BobShellResult; } catch { /* incomplete */ }
+          }
+        }
+      }
+      return { ok: false, output: '', stderr: 'Stream ended without result', durationMs: 0, exitCode: -1 };
+    }
+
     return (await res.json()) as BobShellResult;
   } catch (err) {
     return {
