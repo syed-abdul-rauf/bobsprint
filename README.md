@@ -36,17 +36,29 @@ No Bob? Click **Skip — Try demo mode** on the setup screen. Demo replays pre-r
 ```
 Browser (bobsprint.vercel.app)
   │
-  ├─ GET /api/bob  ──→  Vercel (availability check, fast)
+  ├─ GET /api/bob  ──→  Vercel  ──→  { available, relay }   (fast, runtime relay discovery)
   │
-  └─ POST /api/bob ──→  VPS via Cloudflare Tunnel (HTTPS)
-                           └─ IBM Bob Shell CLI (child_process.spawn)
-                                └─ IBM Bob AI  ──→  Response
+  └─ POST {relay}/api/bob ──→  VPS via Cloudflare Tunnel (HTTPS)
+                                  └─ IBM Bob Shell CLI (child_process.spawn)
+                                       └─ IBM Bob AI  ──→  SSE Response
 ```
 
 **Why VPS + tunnel?**
 - Vercel hobby functions timeout at 10s. Bob runs take 2–5 minutes.
 - Browser → VPS is blocked by mixed-content (HTTPS page can't fetch HTTP). Cloudflare Tunnel gives the VPS a free HTTPS URL.
 - POST responses stream as SSE (Server-Sent Events) with 30s keepalive pings so the Cloudflare 100s proxy timeout never fires.
+
+**Runtime relay discovery (no rebuild on tunnel restart).**
+The browser resolves the relay URL at runtime from `GET /api/bob`'s `relay`
+field (sourced from the `BOB_RELAY_URL` server env), then POSTs Bob calls
+directly to the tunnel. Cloudflare quick-tunnel URLs change on every restart and
+have no uptime guarantee — because the URL is read at runtime, a restart only
+needs a `BOB_RELAY_URL` env update (server env, takes effect immediately, **no
+rebuild**), and any already-open browser tab self-heals on its next run. The
+Vercel `POST /api/bob` proxy path is intentionally disabled (it returns a fast
+JSON error instead of a doomed multi-minute proxy that Vercel kills into a 504
+HTML page). `NEXT_PUBLIC_BOB_RELAY_URL` remains only as a build-time fast-path
+fallback for when the runtime `GET` is unreachable.
 
 ---
 
@@ -149,15 +161,30 @@ server {
 
 | Variable | Where set | Value |
 |----------|-----------|-------|
-| `BOB_RELAY_URL` | Server (Vercel) | `http://72.61.80.140` — GET availability check relay |
-| `NEXT_PUBLIC_BOB_RELAY_URL` | Build-time (Vercel) | Cloudflare tunnel HTTPS URL — browser POSTs Bob calls here directly |
+| `BOB_RELAY_URL` | Server (Vercel), all envs | Cloudflare tunnel **HTTPS** URL — returned by `GET /api/bob` and POSTed to directly by the browser at runtime |
+| `NEXT_PUBLIC_BOB_RELAY_URL` | Build-time (Vercel), optional | Stale-tolerant fast-path fallback only; runtime discovery via `GET` takes precedence |
 
-`NEXT_PUBLIC_BOB_RELAY_URL` must be updated whenever the Cloudflare tunnel restarts (URL changes). Use the Vercel CLI:
+When the Cloudflare tunnel restarts (URL changes), update **only** `BOB_RELAY_URL`. It is a server runtime env — the change takes effect immediately with **no rebuild and no redeploy**:
 
 ```bash
-vercel env rm NEXT_PUBLIC_BOB_RELAY_URL production --yes
-echo "https://<new-url>.trycloudflare.com" | vercel env add NEXT_PUBLIC_BOB_RELAY_URL production
-vercel --prod
+for e in production preview development; do
+  vercel env rm BOB_RELAY_URL "$e" --yes 2>/dev/null
+  echo "https://<new-url>.trycloudflare.com" | vercel env add BOB_RELAY_URL "$e"
+done
+# No `vercel --prod` needed — server env is read at request time.
+```
+
+Get the live tunnel URL from the VPS. The log files accumulate URLs from old
+sessions — take the URL from the **last** "quick Tunnel has been created"
+banner, then verify it actually answers before trusting it:
+
+```bash
+ssh root@72.61.80.140 \
+  "grep -hA2 'quick Tunnel has been created' /tmp/cf-err.log \
+   | grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' | tail -1"
+
+# Verify (must return {"available":true,...}):
+curl -s https://<that-url>/api/bob
 ```
 
 ---

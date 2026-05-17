@@ -109,29 +109,27 @@ export async function POST(request: NextRequest) {
   }
 
   if (BOB_RELAY_URL) {
-    try {
-      const relayTimeout = typeof timeoutMs === 'number' ? timeoutMs : 120_000;
-      const res = await fetch(`${BOB_RELAY_URL}/api/bob`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, mode, timeoutMs: relayTimeout }),
-        signal: AbortSignal.timeout(relayTimeout + 5_000),
-      });
-      // VPS now returns SSE — pass the stream through to the browser.
-      if (res.headers.get('content-type')?.includes('text/event-stream')) {
-        return new Response(res.body, {
-          headers: { ...CORS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
-        });
-      }
-      const text = await res.text();
-      try {
-        return NextResponse.json(JSON.parse(text), { headers: CORS });
-      } catch {
-        return NextResponse.json({ ok: false, output: '', stderr: `VPS returned non-JSON: ${text.slice(0, 200)}`, durationMs: 0, exitCode: -1 });
-      }
-    } catch (e) {
-      return NextResponse.json({ ok: false, output: '', stderr: String(e), durationMs: 0, exitCode: -1 });
-    }
+    // A Bob run takes 2–5 minutes. Proxying its SSE stream through this Vercel
+    // function would exceed the serverless time limit (10s on hobby), and Vercel
+    // would replace the response with its own HTML 504 page — which the browser
+    // can't parse, surfacing as a "<!DOCTYPE html>…" failure in the evidence
+    // trail. The browser resolves `relay` from the GET handler and POSTs to the
+    // tunnel directly, so this path is only hit by stale clients. Fail fast with
+    // a clear JSON instruction instead of a doomed multi-minute proxy attempt.
+    return NextResponse.json(
+      {
+        ok: false,
+        output: '',
+        stderr:
+          'This deployment runs Bob via a direct browser→relay connection to ' +
+          'avoid the serverless time limit. The client resolves the relay at ' +
+          'runtime — reload the page if this persists.',
+        durationMs: 0,
+        exitCode: -1,
+        relay: BOB_RELAY_URL,
+      },
+      { headers: CORS },
+    );
   }
 
   const resolvedTimeoutMs = typeof timeoutMs === 'number' ? timeoutMs : 120_000;
