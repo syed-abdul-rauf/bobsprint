@@ -12,12 +12,13 @@ export interface BobRunOptions {
 }
 
 const RELAY = process.env.NEXT_PUBLIC_BOB_RELAY_URL?.replace(/\/$/, '') ?? '';
-const BOB_ENDPOINT = RELAY ? `${RELAY}/api/bob` : '/api/bob';
+// POST calls go direct to VPS (bypasses Vercel timeout); GET check always via Vercel (no CORS needed).
+const BOB_POST_ENDPOINT = RELAY ? `${RELAY}/api/bob` : '/api/bob';
 
 /** Returns true if the bob binary exists on disk and is authenticated. */
 export async function isBobBridgeAvailable(signal?: AbortSignal): Promise<boolean> {
   try {
-    const res = await fetch(BOB_ENDPOINT, { method: 'GET', signal });
+    const res = await fetch('/api/bob', { method: 'GET', signal });
     if (!res.ok) return false;
     const data = await res.json();
     return data.available === true;
@@ -37,7 +38,7 @@ export async function runWithBob(
   if (signal) signal.addEventListener('abort', () => ctrl.abort(), { once: true });
 
   try {
-    const res = await fetch(BOB_ENDPOINT, {
+    const res = await fetch(BOB_POST_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, mode }),

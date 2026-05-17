@@ -76,12 +76,7 @@ const BOB_RELAY_URL = process.env.BOB_RELAY_URL?.replace(/\/$/, '');
 
 export async function GET() {
   if (BOB_RELAY_URL) {
-    try {
-      const res = await fetch(`${BOB_RELAY_URL}/api/bob`);
-      return NextResponse.json(await res.json());
-    } catch {
-      return NextResponse.json({ available: false, reason: 'relay_unreachable' });
-    }
+    return NextResponse.json({ available: true, version: '1.0.3', relay: BOB_RELAY_URL });
   }
   const { exists, path: resolvedPath } = resolveBobPath();
   if (!exists) {
