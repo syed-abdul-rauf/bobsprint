@@ -73,7 +73,12 @@ export async function runWithBob(
   prompt: string,
   opts: BobRunOptions = {},
 ): Promise<BobShellResult> {
-  const { mode, timeoutMs = 120_000, signal } = opts;
+  // Bob runs take 2–5 minutes (per README). The old 2-min default aborted the
+  // SSE mid-run ("BodyStreamBuffer was aborted"). Give a 10-min client ceiling
+  // and tell the VPS to kill bob 1 min earlier, so the stream always ends with
+  // a real result event instead of a blind client-side abort.
+  const { mode, timeoutMs = 600_000, signal } = opts;
+  const vpsTimeoutMs = Math.max(60_000, timeoutMs - 60_000);
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -88,7 +93,7 @@ export async function runWithBob(
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, mode }),
+      body: JSON.stringify({ prompt, mode, timeoutMs: vpsTimeoutMs }),
       signal: ctrl.signal,
     });
 

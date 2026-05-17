@@ -62,7 +62,10 @@ interface RawPlanItem {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const DEMO_DELAY_MS = 1_500;
-const RUN_TIMEOUT_MS = 5 * 60 * 1_000; // 5-minute hard limit
+// A real run chains multiple 2–5 min Bob calls (Plan‖Ask, then Code, then
+// commit/PR messages). 5 min aborted mid-pipeline; 20 min covers a full run
+// with headroom. The kill switch remains for manual early abort.
+const RUN_TIMEOUT_MS = 20 * 60 * 1_000;
 
 function extToLang(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() ?? '';

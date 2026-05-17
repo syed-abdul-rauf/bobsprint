@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { prompt, mode, timeoutMs = 120_000 } = body;
+  const { prompt, mode, timeoutMs = 540_000 } = body;
   if (typeof prompt !== 'string' || !prompt.trim()) {
     return NextResponse.json({ error: 'prompt required' }, { status: 400 });
   }
@@ -147,7 +147,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const resolvedTimeoutMs = typeof timeoutMs === 'number' ? timeoutMs : 120_000;
+  // Bob runs take 2–5 min; allow up to 9 min before SIGTERM. The client's own
+  // AbortController is set ~1 min longer so the kill emits a result event first.
+  const resolvedTimeoutMs = typeof timeoutMs === 'number' ? timeoutMs : 540_000;
 
   // Stream SSE so proxy timeouts (Cloudflare 524, nginx) don't kill long Bob runs.
   // Keepalive comments are sent every 30s; the final result arrives as a data event.
