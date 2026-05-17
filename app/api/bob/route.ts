@@ -175,7 +175,7 @@ async function runBob(
     // but Bob cannot write outside it even with --yolo.
     const proc: ChildProcessWithoutNullStreams = spawn(BOB_CMD, [...BOB_PREFIX_ARGS, ...args], {
       cwd: process.env.BOB_CWD ?? process.cwd(),
-      env: { ...process.env, NODE_OPTIONS: '--require /tmp/strip-flag.js' },
+      env: { ...process.env, NODE_OPTIONS: '--require /opt/bobfix/strip-flag.js' },
       // shell:false so Node passes args directly — avoids Windows quote-escaping
       // issues with long prompt strings. Node handles arg marshalling for us.
       shell: false,
