@@ -4,6 +4,16 @@
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import type { ChildProcessWithoutNullStreams } from 'child_process';
@@ -76,13 +86,13 @@ const BOB_RELAY_URL = process.env.BOB_RELAY_URL?.replace(/\/$/, '');
 
 export async function GET() {
   if (BOB_RELAY_URL) {
-    return NextResponse.json({ available: true, version: '1.0.3', relay: BOB_RELAY_URL });
+    return NextResponse.json({ available: true, version: '1.0.3', relay: BOB_RELAY_URL }, { headers: CORS });
   }
   const { exists, path: resolvedPath } = resolveBobPath();
   if (!exists) {
-    return NextResponse.json({ available: false, reason: 'binary_not_found' });
+    return NextResponse.json({ available: false, reason: 'binary_not_found' }, { headers: CORS });
   }
-  return NextResponse.json({ available: true, version: '1.0.3', path: resolvedPath });
+  return NextResponse.json({ available: true, version: '1.0.3', path: resolvedPath }, { headers: CORS });
 }
 
 export async function POST(request: NextRequest) {
@@ -124,7 +134,7 @@ export async function POST(request: NextRequest) {
     typeof timeoutMs === 'number' ? timeoutMs : 120_000,
   );
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, { headers: CORS });
 }
 
 // ── Bob spawn ─────────────────────────────────────────────────────────────────
