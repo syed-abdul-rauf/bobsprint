@@ -18,7 +18,17 @@ export interface BobRunOptions {
   signal?: AbortSignal;
 }
 
-const BUILD_TIME_RELAY = process.env.NEXT_PUBLIC_BOB_RELAY_URL?.replace(/\/$/, '') ?? '';
+/** Strip a leading BOM/zero-width char + stray quotes/slashes that env tooling
+ *  sometimes injects, so the URL we fetch is always well-formed. */
+function cleanUrl(v: string | undefined | null): string {
+  let s = v ?? '';
+  while (s.length && (s.charCodeAt(0) === 0xfeff || s.charCodeAt(0) === 0x200b)) {
+    s = s.slice(1);
+  }
+  return s.trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '');
+}
+
+const BUILD_TIME_RELAY = cleanUrl(process.env.NEXT_PUBLIC_BOB_RELAY_URL);
 
 // Resolved once per session: the current relay base URL ('' = call Vercel directly).
 let relayResolution: Promise<string> | null = null;
@@ -36,9 +46,8 @@ function resolveRelay(signal?: AbortSignal): Promise<string> {
       const res = await fetch('/api/bob', { method: 'GET', signal });
       if (res.ok) {
         const data = (await res.json()) as { available?: boolean; relay?: string };
-        if (typeof data.relay === 'string' && data.relay) {
-          return data.relay.replace(/\/$/, '');
-        }
+        const relay = cleanUrl(data.relay);
+        if (relay) return relay;
       }
     } catch {
       /* fall through to build-time fallback */
@@ -127,9 +136,10 @@ export async function runWithBob(
 
     // Self-heal: a stale client that POSTed to Vercel gets a `relay` hint back.
     // Retry once directly against it and cache it for the rest of the session.
-    if (!first.ok && !relay && first.relay) {
-      relayResolution = Promise.resolve(first.relay.replace(/\/$/, ''));
-      return await attempt(`${first.relay.replace(/\/$/, '')}/api/bob`);
+    const hinted = cleanUrl(first.relay);
+    if (!first.ok && !relay && hinted) {
+      relayResolution = Promise.resolve(hinted);
+      return await attempt(`${hinted}/api/bob`);
     }
     return first;
   } catch (err) {

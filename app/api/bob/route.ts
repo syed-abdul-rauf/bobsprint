@@ -82,7 +82,22 @@ interface BobShellResult {
 
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
-const BOB_RELAY_URL = process.env.BOB_RELAY_URL?.replace(/\/$/, '');
+// Sanitize defensively: env values set via various tooling can carry a UTF-8
+// BOM or stray whitespace/quotes, which would corrupt the URL the browser fetches.
+function cleanUrl(v: string | undefined): string {
+  let s = v ?? '';
+  // Strip a leading BOM / zero-width chars (U+FEFF, U+200B) that env tooling
+  // sometimes prepends — they would corrupt the URL the browser fetches.
+  while (s.length && (s.charCodeAt(0) === 0xfeff || s.charCodeAt(0) === 0x200b)) {
+    s = s.slice(1);
+  }
+  return s
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .replace(/\/+$/, '');
+}
+
+const BOB_RELAY_URL = cleanUrl(process.env.BOB_RELAY_URL);
 
 export async function GET() {
   if (BOB_RELAY_URL) {
