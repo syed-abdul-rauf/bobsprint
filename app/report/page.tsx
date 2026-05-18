@@ -7,6 +7,7 @@ import { HydrationGate } from '@/components/shell/hydration-gate';
 import { ReportCard } from '@/components/report/report-card';
 import { BobFiles } from '@/components/report/bob-files';
 import { AskBob } from '@/components/report/ask-bob';
+import { ShareButton } from '@/components/report/share-button';
 import { ScoreRing } from '@/components/ui/score-ring';
 import { Badge } from '@/components/ui/badge';
 import { useApp, useActiveRun } from '@/lib/store';
@@ -79,7 +80,14 @@ function ReportView() {
         </div>
       )}
 
-      {activeRun.stage === 'done' && <HealthCard run={activeRun} />}
+      {activeRun.stage === 'done' && (
+        <>
+          <div className="flex justify-end mb-3">
+            <ShareButton run={activeRun} />
+          </div>
+          <HealthCard run={activeRun} />
+        </>
+      )}
 
       <ReportCard run={activeRun} />
 

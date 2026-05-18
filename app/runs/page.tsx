@@ -10,6 +10,7 @@ import {
 import { AppHeader } from '@/components/app-header';
 import { HydrationGate } from '@/components/shell/hydration-gate';
 import { Badge } from '@/components/ui/badge';
+import { ShareButton } from '@/components/report/share-button';
 import { useApp } from '@/lib/store';
 import { computeHealth } from '@/lib/health';
 import type { AutoPilotRun } from '@/lib/types';
@@ -156,6 +157,11 @@ function RunsView() {
                   >
                     Live pipeline
                   </button>
+                )}
+                {st === 'done' && (
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <ShareButton run={r} variant="subtle" />
+                  </span>
                 )}
                 {confirmId === r.id ? (
                   <span className="ml-auto flex items-center gap-2 text-danger">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, FileSearch, BarChart2, Settings2, History } from 'lucide-react';
+import { Zap, FileSearch, BarChart2, Settings2, History, Package } from 'lucide-react';
 import { Brand } from './shell/brand';
 import { useApp, useActiveRun } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ const NAV = [
   { href: '/runs',     label: 'History',  icon: History    },
   { href: '/evidence', label: 'Evidence', icon: FileSearch },
   { href: '/report',   label: 'Report',   icon: BarChart2  },
+  { href: '/pack',     label: 'Pack',     icon: Package    },
 ];
 
 export function AppHeader({ children }: { children?: React.ReactNode }) {
