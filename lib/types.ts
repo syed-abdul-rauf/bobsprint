@@ -161,6 +161,9 @@ export interface AutoPilotRun {
   branchName?: string;
   filesAnalyzed?: number;
   error?: string;
+  /** Non-fatal Apply-stage problem (e.g. invalid GitHub PAT). The run still
+   *  completes — Bob's analysis is preserved; only the PR was skipped. */
+  applyWarning?: string;
   isDemo: boolean;
   abortedAt?: number;
 }

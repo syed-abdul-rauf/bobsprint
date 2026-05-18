@@ -128,6 +128,10 @@ export function ReportCard({ run }: { run: AutoPilotRun }) {
           Open draft pull request
           <ExternalLink className="w-4 h-4 opacity-70" />
         </motion.a>
+      ) : run.applyWarning ? (
+        <div className="card p-4 text-warning text-sm leading-relaxed">
+          {run.applyWarning}
+        </div>
       ) : (
         <div className="card p-4 text-center text-ink-500 text-sm font-mono">
           {run.stage === 'done' ? 'No PR opened (demo mode or no approved changes)' : 'PR not yet opened'}

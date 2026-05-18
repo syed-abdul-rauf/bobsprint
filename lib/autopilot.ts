@@ -534,7 +534,10 @@ export class AutoPilotController {
         durationMs: 0,
       });
     } else if (approvedWins.length > 0 && this.pat) {
-      // Real GitHub apply
+      // Real GitHub apply. A bad/expired PAT or any GitHub API failure here must
+      // NOT discard the successful Bob pipeline above — degrade gracefully: log
+      // the reason, skip the PR, and still finish the run as "done".
+      try {
       const parsed = parseGitHubUrl(this.run.githubUrl)!;
       const { forkOwner, defaultBranch } = await getOrCreateFork(
         parsed.owner, parsed.repo, this.pat,
@@ -599,6 +602,22 @@ export class AutoPilotController {
         eventType: 'pr-opened',
         summary: `Opened draft PR: "${prTitle.trim()}"`,
       });
+      } catch (err) {
+        // A genuine abort must still abort.
+        if (this.abortCtrl.signal.aborted) throw err;
+        const raw = err instanceof Error ? err.message : String(err);
+        const isAuth = /\b401\b|bad credentials/i.test(raw);
+        const friendly = isAuth
+          ? 'Apply skipped — GitHub rejected the token (401 Bad credentials). It is invalid or expired. Generate a new classic token with "repo" scope at github.com/settings/tokens and save it in Settings. Bob’s analysis above is complete and was not lost.'
+          : `Apply skipped — GitHub error: ${raw.slice(0, 180)}`;
+        this.patch({ applyWarning: friendly });
+        this.addEvidence({
+          stage: 'apply',
+          eventType: 'error',
+          summary: friendly,
+        });
+        // fall through to Done — the Bob pipeline result is preserved
+      }
     }
 
     // ── Stage 5: Done ───────────────────────────────────────────────────────
