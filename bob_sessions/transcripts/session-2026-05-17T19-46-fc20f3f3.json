@@ -1,0 +1,71 @@
+{
+  "sessionId": "fc20f3f3-3266-4398-9a53-ec7b06fa74e7",
+  "projectHash": "7a8f1e7390fc5e08b983ced6b4b479e8e0d8e8355827721f07e51db4358858cb",
+  "startTime": "2026-05-17T19:47:21.961Z",
+  "lastUpdated": "2026-05-17T19:47:26.314Z",
+  "messages": [
+    {
+      "id": "1603199e-aaac-4d7a-8635-9f1f4e1d253d",
+      "timestamp": "2026-05-17T19:47:21.961Z",
+      "type": "user",
+      "content": "Reply with exactly: AUTHOK"
+    },
+    {
+      "id": "e19f3af9-3b91-4b56-9269-0ccac16e15b9",
+      "timestamp": "2026-05-17T19:47:24.153Z",
+      "type": "bob-shell",
+      "content": "AUTHOK",
+      "thoughts": [],
+      "tokens": null,
+      "model": "premium"
+    },
+    {
+      "id": "116859cc-400e-4fc1-bfbf-5a7aa376f7f3",
+      "timestamp": "2026-05-17T19:47:24.154Z",
+      "type": "user",
+      "content": "This is an automated message, do not respond, just act on it: Please continue. You must always use a tool. Did you forget to call a tool? Or formatted it wrong? Otherwise you *must* use attempt_completion (even if already used) or ask_followup_question (if available) to communicate and wait for user input"
+    },
+    {
+      "id": "508b3fb9-7b7d-4d5e-9ab1-86d5ee00a24d",
+      "timestamp": "2026-05-17T19:47:26.311Z",
+      "type": "bob-shell",
+      "content": "[using tool attempt_completion: Successfully completed | Cost: 0.06]",
+      "thoughts": [],
+      "tokens": {
+        "input": 12141,
+        "output": 26,
+        "cached": 12058,
+        "thoughts": 0,
+        "tool": 0,
+        "total": 12167
+      },
+      "model": "premium",
+      "toolCalls": [
+        {
+          "id": "tool-1",
+          "name": "attempt_completion",
+          "args": {
+            "result": "\nAUTHOK\n"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "tool-1",
+                "name": "attempt_completion",
+                "response": {
+                  "output": "\nAUTHOK\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-05-17T19:47:26.314Z",
+          "resultDisplay": "\nAUTHOK\n",
+          "displayName": "Task Completion",
+          "description": "After each tool use, the user will respond with the result of that tool use, i.e. if it succeeded or failed, along with any reasons for failure. Once you've received the results of tool uses and can confirm that the task is complete, use this tool to briefly summarize the completion of the task to the user. Do not use it until previous tool uses reported the status \"Success\". Optionally you may provide a CLI command to showcase the result of your work. If the user requested a specific output, display the output exactly as requested without any extra text. If the task is a question that can be answered without additional information, you *must* DIRECTLY use attempt_completion tool.",
+          "renderOutputAsMarkdown": true
+        }
+      ]
+    }
+  ]
+}

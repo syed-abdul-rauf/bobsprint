@@ -7,6 +7,12 @@ This directory contains Bob Bridge invocation logs and exported session artifact
 | File | Description |
 |------|-------------|
 | `bridge.log` | JSONL log of every Bob Shell spawn — command, args, mode, duration, exit code. Prompt and response bodies are never stored here. |
+| `transcripts/*.json` | **Full IBM Bob Shell session exports** — verbatim session JSON (`sessionId`, `messages[]` with prompts, Bob responses, and tool calls) from real live pipeline runs. Exported from the VPS Bob runner (`~/.bob/tmp/<projectHash>/chats/`). |
+| `transcripts/SESSIONS.md` | Index of all exported sessions with sessionId, start time, message count, size. |
+| `session-northpeak-demo.md` | Annotated walkthrough of a representative end-to-end session. |
+
+See [`transcripts/SESSIONS.md`](transcripts/SESSIONS.md) for the full list of
+exported Bob sessions (hackathon submission requirement).
 
 ## bridge.log format
 
