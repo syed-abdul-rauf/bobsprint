@@ -25,13 +25,12 @@ interface AppStore {
   deleteRun: (id: string) => void;
 }
 
-function applyThemeClass(theme: ThemePreference) {
+// BobSprint is a dark-only product — its surfaces, gradients, and contrast are
+// designed exclusively for dark. Light/system would render unreadable, so the
+// `.dark` class is always on regardless of stored or OS preference.
+function applyThemeClass(_theme: ThemePreference) {
   if (typeof document === 'undefined') return;
-  const dark =
-    theme === 'dark' ||
-    (theme === 'system' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.classList.toggle('dark', dark);
+  document.documentElement.classList.add('dark');
 }
 
 function writeThemeKey(theme: ThemePreference) {

@@ -33,9 +33,11 @@ function buildPrompt(run: AutoPilotRun, question: string): string {
 
 export function AskBob({ run }: { run: AutoPilotRun }) {
   const updateRun = useApp((s) => s.updateRun);
-  const followups = useApp(
-    (s) => s.runs.find((r) => r.id === run.id)?.followups ?? [],
-  );
+  // Select the stored value itself (a stable reference / undefined) — NEVER
+  // `?? []` inside the selector: a fresh array literal each render makes
+  // Zustand re-render forever ("Maximum update depth exceeded").
+  const stored = useApp((s) => s.runs.find((r) => r.id === run.id)?.followups);
+  const followups = stored ?? [];
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
