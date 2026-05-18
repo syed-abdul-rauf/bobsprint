@@ -166,6 +166,19 @@ export interface AutoPilotRun {
   applyWarning?: string;
   isDemo: boolean;
   abortedAt?: number;
+  /** Updated every few seconds while a controller is actively driving this run.
+   *  A non-terminal stage with a stale heartbeat = interrupted (tab closed) and
+   *  is eligible for auto-resume. */
+  lastHeartbeat?: number;
+  /** Follow-up questions asked to Bob about the analyzed repo after the run. */
+  followups?: BobFollowup[];
+}
+
+export interface BobFollowup {
+  q: string;
+  a: string;
+  ts: number;
+  cost?: number;
 }
 
 // ── Demo mode ─────────────────────────────────────────────────────────────────

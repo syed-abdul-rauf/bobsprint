@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { ThemeProvider } from '@/components/shell/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
+import { RunResumer } from '@/components/shell/run-resumer';
 
 export const metadata: Metadata = {
   title: 'BobSprint — From unknown repo to production-ready sprint',
@@ -28,7 +29,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <RunResumer />
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

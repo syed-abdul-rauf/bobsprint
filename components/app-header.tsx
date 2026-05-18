@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, FileSearch, BarChart2, Settings2 } from 'lucide-react';
+import { Zap, FileSearch, BarChart2, Settings2, History } from 'lucide-react';
 import { Brand } from './shell/brand';
 import { useApp, useActiveRun } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
 const NAV = [
-  { href: '/run',      label: 'Run',      icon: Zap       },
+  { href: '/run',      label: 'Run',      icon: Zap        },
+  { href: '/runs',     label: 'History',  icon: History    },
   { href: '/evidence', label: 'Evidence', icon: FileSearch },
   { href: '/report',   label: 'Report',   icon: BarChart2  },
 ];
@@ -35,7 +36,8 @@ export function AppHeader({ children }: { children?: React.ReactNode }) {
 
           <div className="flex items-center gap-1">
             {NAV.map(({ href, label, icon: Icon }) => {
-              const active = pathname.startsWith(href);
+              // Exact match (or nested route) so /runs doesn't light up /run.
+              const active = pathname === href || pathname.startsWith(href + '/');
               return (
                 <Link
                   key={href}

@@ -41,6 +41,9 @@ export interface AutoPilotParams {
    * during development. Activate with NEXT_PUBLIC_BOBSPRINT_DEV_MODE=1.
    */
   devMode?: boolean;
+  /** Resume an interrupted run: skip stages whose Bob outputs are already
+   *  persisted (no double Bobcoin spend), continue from where it stopped. */
+  resume?: boolean;
   onUpdate: (patch: Partial<AutoPilotRun>) => void;
   /** Injectable Bob runner — defaults to the real bridge client. */
   bobRunner?: BobRunner;
@@ -115,10 +118,12 @@ export class AutoPilotController {
   private pat: string;
   private budget: number;
   private devMode: boolean;
+  private resumeMode: boolean;
   private onUpdate: (patch: Partial<AutoPilotRun>) => void;
   private bobRun: BobRunner;
   private abortCtrl = new AbortController();
   private totalTimeout: ReturnType<typeof setTimeout> | null = null;
+  private heartbeat: ReturnType<typeof setInterval> | null = null;
   private timedOut = false;
 
   private readonly timeoutMs: number;
@@ -128,6 +133,7 @@ export class AutoPilotController {
     this.pat = params.pat ?? '';
     this.budget = params.budget ?? Infinity;
     this.devMode = params.devMode ?? false;
+    this.resumeMode = params.resume ?? false;
     this.timeoutMs = params.timeoutMs ?? RUN_TIMEOUT_MS;
     this.onUpdate = params.onUpdate;
     this.bobRun = params.bobRunner ?? runWithBob;
@@ -144,6 +150,13 @@ export class AutoPilotController {
       this.timedOut = true;
       this.abortCtrl.abort();
     }, this.timeoutMs);
+
+    // Heartbeat: proves to the resumer that a controller is alive driving this
+    // run. A non-terminal stage with a stale heartbeat = tab was closed.
+    this.patch({ lastHeartbeat: Date.now() });
+    this.heartbeat = setInterval(() => {
+      this.patch({ lastHeartbeat: Date.now() });
+    }, 5_000);
 
     try {
       await this.runPipeline();
@@ -173,6 +186,7 @@ export class AutoPilotController {
       }
     } finally {
       if (this.totalTimeout) clearTimeout(this.totalTimeout);
+      if (this.heartbeat) clearInterval(this.heartbeat);
     }
   }
 
@@ -237,10 +251,27 @@ export class AutoPilotController {
       this.run.githubUrl === DEMO_FIXTURE_URL ||
       this.run.githubUrl === `demo`;
 
-    // ── Stage 1: Recon ──────────────────────────────────────────────────────
-    this.patch({ stage: 'recon' });
+    // Resume: if the fan-out (the only Bobcoin-spending stage) already
+    // completed before the tab closed, reuse the persisted Bob outputs and
+    // jump straight to the safety gate — no recon re-run, no double spend.
+    // If fan-out was interrupted before any win was produced, it re-runs.
+    const fanOutDone =
+      this.resumeMode &&
+      (this.run.stage === 'safety-gate' ||
+        this.run.stage === 'apply' ||
+        (this.run.stage === 'fan-out' &&
+          this.run.safeWins.length > 0 &&
+          this.run.evidence.some((e) => e.eventType === 'bob-plan')));
+    const reconAlreadyLogged = this.run.evidence.some(
+      (e) => e.eventType === 'recon-complete',
+    );
 
     let contextBundle = '';
+    let pendingWins: SafeWin[] = [];
+
+    if (!fanOutDone) {
+    // ── Stage 1: Recon ──────────────────────────────────────────────────────
+    this.patch({ stage: 'recon' });
 
     if (isDemo) {
       await this.demoDelay(2_000);
@@ -265,12 +296,14 @@ export class AutoPilotController {
         '- [critical] Cache contamination: services/cache.py does not scope keys by tenant_id.',
       ].join('\n');
 
-      this.addEvidence({
-        stage: 'recon',
-        eventType: 'recon-complete',
-        summary: 'Analyzed 47 files across 12 folders. Stack: FastAPI, Next.js, PostgreSQL, Alembic, Docker. Missing: test suite, SECURITY.md, CI workflow.',
-        durationMs: 2_000,
-      });
+      if (!reconAlreadyLogged) {
+        this.addEvidence({
+          stage: 'recon',
+          eventType: 'recon-complete',
+          summary: 'Analyzed 47 files across 12 folders. Stack: FastAPI, Next.js, PostgreSQL, Alembic, Docker. Missing: test suite, SECURITY.md, CI workflow.',
+          durationMs: 2_000,
+        });
+      }
       this.patch({ filesAnalyzed: 47 });
     } else {
       const parsed = parseGitHubUrl(this.run.githubUrl);
@@ -310,12 +343,14 @@ export class AutoPilotController {
       contextBundle = buildContextBundle(project);
       const durationMs = Date.now() - t0;
 
-      this.addEvidence({
-        stage: 'recon',
-        eventType: 'recon-complete',
-        summary: `Analyzed ${snap.totalFiles} files. Stack: ${snap.stack.slice(0, 4).map((s) => s.label).join(', ')}. Missing: ${snap.missing.map((m) => m.label).join(', ') || 'none'}.`,
-        durationMs,
-      });
+      if (!reconAlreadyLogged) {
+        this.addEvidence({
+          stage: 'recon',
+          eventType: 'recon-complete',
+          summary: `Analyzed ${snap.totalFiles} files. Stack: ${snap.stack.slice(0, 4).map((s) => s.label).join(', ')}. Missing: ${snap.missing.map((m) => m.label).join(', ') || 'none'}.`,
+          durationMs,
+        });
+      }
       this.patch({
         filesAnalyzed: snap.totalFiles,
         repoOwner: parsed.owner,
@@ -376,7 +411,7 @@ export class AutoPilotController {
     // Call C: sequential Code calls for each candidate
     // devMode: limit to 1 file to preserve Bobcoin budget during development.
     const maxWins = this.devMode ? 1 : 5;
-    const pendingWins: SafeWin[] = [];
+    pendingWins = [];
     for (const raw of rawWins.slice(0, maxWins)) {
       if (this.aborted()) throw new Error('aborted');
 
@@ -444,13 +479,20 @@ export class AutoPilotController {
     }
 
     if (this.aborted()) throw new Error('aborted');
+    } else {
+      // Resume: fan-out already completed before interruption — reuse the
+      // persisted Bob results, skipping recon + every Bob fan-out call.
+      pendingWins = this.run.safeWins.map((w) => ({ ...w }));
+    }
 
     // ── Stage 3: Safety gate ────────────────────────────────────────────────
     this.patch({ stage: 'safety-gate' });
 
     for (const win of pendingWins) {
       if (this.aborted()) throw new Error('aborted');
-      if (win.safetyStatus === 'deferred') continue; // already decided
+      // Already decided (deferred at fan-out, or approved in a prior attempt
+      // before the tab closed) — idempotent, no Bob re-spend on resume.
+      if (win.safetyStatus === 'deferred' || win.safetyStatus === 'approved') continue;
 
       if (this.devMode) {
         // devMode: skip Bob safety-gate call; auto-approve path-classified items.
@@ -498,7 +540,10 @@ export class AutoPilotController {
     // ── Stage 4: Apply + PR ─────────────────────────────────────────────────
     this.patch({ stage: 'apply' });
 
-    if (isDemo) {
+    if (this.run.prUrl) {
+      // Resume: the PR was already opened before the tab closed — don't
+      // re-fork, re-commit, or re-open. Nothing to redo here.
+    } else if (isDemo) {
       // Skip real GitHub writes; use fixture data for commit SHAs and PR URL
       await this.demoDelay(1_000);
       const demoShas = ['a1b2c3d', 'e4f5g6h', 'i7j8k9l'];
